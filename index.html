@@ -1234,7 +1234,9 @@ body::after {
     padding:10px;
     gap:10px;
   }
-  .location-card { min-height:auto; padding:12px; }
+  .location-card { min-height:180px; padding:14px; }
+  .loc-name { font-size:20px; }
+  .loc-reward { font-size:15px; }
 
   /* ===== EXPLORE VIEW ===== */
   #view-explore { flex-direction:column; }
@@ -1286,8 +1288,53 @@ body::after {
   .tv-body { flex-direction:column; }
   .tv-left { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:35vh; }
 
+  /* TV view: stack panels vertically */
+  .tv-view-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .tv-left-panel {
+    overflow-y: visible !important;
+  }
+  .tv-right-panel {
+    width: 100% !important;
+    flex-shrink: unset !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  /* TV screen: smaller on mobile */
+  .tv-screen-big {
+    width: 100% !important;
+    height: 160px !important;
+    max-width: 100% !important;
+  }
+
   /* ===== ARTIFACTS VIEW ===== */
   .artifacts-grid { grid-template-columns:1fr 1fr; padding:10px; gap:8px; }
+
+  /* Museum Artifak: stack right panel below grid */
+  .artifacts-view-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .artifacts-view-body > div:first-child {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+  }
+  .artifacts-right-panel {
+    width: 100% !important;
+    flex-shrink: unset !important;
+    border-left: none !important;
+    border-top: 1px solid rgba(139,69,19,0.3) !important;
+  }
+  /* Artifact grid: 2-column on mobile */
+  #artifact-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding: 10px !important;
+    gap: 8px !important;
+  }
 
   /* ===== CAPTURE OVERLAY ===== */
   #capture-guide-panel { display:none; }
@@ -2054,9 +2101,8 @@ body::after {
         <div class="explore-right" style="position:relative;">
         <!-- MOBILE EXPLORE TOOLBAR (visible only on mobile) -->
         <div id="explore-mobile-toolbar">
-          <button class="explore-mob-btn tool-btn" onclick="openMobileToolDrawer()" title="Pilih Alat">🎒</button>
+          <button class="explore-mob-btn tool-btn" onclick="openMobileToolDrawer()" title="Inventori Alat">🎒</button>
           <button class="explore-mob-btn room-btn" onclick="reopenRoomSelect()" title="Pilih Ruangan">🚪</button>
-          <button class="explore-mob-btn" onclick="manualScan()" title="Scan Manual">🔍</button>
           <button class="explore-mob-btn exit-btn" onclick="exitExplore()" title="Keluar Lokasi">✕</button>
         </div>
         <!-- ROOM SELECT OVERLAY -->
@@ -2211,9 +2257,9 @@ body::after {
           <div style="font-family:'VT323',monospace;font-size:14px;color:var(--abu-light);" id="tv-header-rating">Rating: 0%</div>
         </div>
       </div>
-      <div style="flex:1;display:flex;gap:0;overflow:hidden;">
+      <div class="tv-view-body" style="flex:1;display:flex;gap:0;overflow:hidden;">
         <!-- LEFT: Main upload panel -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:16px;gap:14px;">
+        <div class="tv-left-panel" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:16px;gap:14px;">
 
           <!-- STEP 1: Producer offer / active show banner -->
           <div id="tv-producer-banner" style="display:none;"></div>
@@ -2268,7 +2314,7 @@ body::after {
         </div>
 
         <!-- RIGHT: Stats + Cassette Log -->
-        <div style="width:260px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;">
+        <div class="tv-right-panel" style="width:260px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;">
           <div style="padding:14px;border-bottom:1px solid var(--border);">
             <div style="font-family:'VT323',monospace;font-size:15px;color:var(--kuning-bright);margin-bottom:10px;letter-spacing:2px;">📊 STATISTIK ACARA</div>
             <div id="tv-stats-panel"></div>
@@ -2353,7 +2399,7 @@ body::after {
           <div style="font-family:'VT323',monospace;font-size:13px;color:var(--abu-light);" id="artifact-header-info">Koleksi benda berhantu Nusantara</div>
         </div>
       </div>
-      <div style="flex:1;display:flex;overflow:hidden;">
+      <div class="artifacts-view-body" style="flex:1;display:flex;overflow:hidden;">
         <!-- LEFT: Artifact grid -->
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
           <!-- Filter bar -->
@@ -2374,7 +2420,7 @@ body::after {
           <div id="artifact-grid" style="flex:1;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
         </div>
         <!-- RIGHT: Detail + Pedia -->
-        <div style="width:300px;flex-shrink:0;border-left:1px solid rgba(139,69,19,0.3);display:flex;flex-direction:column;overflow-y:auto;background:rgba(10,8,4,0.7);">
+        <div class="artifacts-right-panel" style="width:300px;flex-shrink:0;border-left:1px solid rgba(139,69,19,0.3);display:flex;flex-direction:column;overflow-y:auto;background:rgba(10,8,4,0.7);">
           <div id="artifact-detail-panel" style="padding:16px;flex:1;">
             <div style="font-family:'VT323',monospace;font-size:16px;color:var(--abu-light);text-align:center;padding:40px 0;">Klik artifak untuk detail</div>
           </div>
@@ -14578,23 +14624,69 @@ function openMobileToolDrawer() {
   const tools = GAME.tools || [];
   if (tools.length === 0) {
     content.innerHTML = '<div style="font-family:VT323,monospace;font-size:16px;color:var(--merah-glow);padding:16px;text-align:center;">⚠️ Tidak ada alat! Beli di Toko dulu.</div>';
-  } else {
-    const captureEffects = ['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'];
-    content.innerHTML = tools.map(t => {
-      const isCapture = captureEffects.includes(t.effect);
-      const disabled = t.uses <= 0 || isCapture;
-      const label = isCapture ? 'Alat Tangkap' : (t.uses <= 0 ? 'Habis' : `${t.uses} sisa`);
-      const safeId = t.id.replace(/[^a-zA-Z0-9_]/g,'_');
-      return `<button onclick="${disabled ? '' : `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_t)useTool(_t);})()`}"
-        style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:transparent;border:none;border-bottom:1px solid rgba(74,140,74,0.1);cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?0.4:1};-webkit-tap-highlight-color:transparent;">
+    drawer.classList.add('open');
+    return;
+  }
+
+  const investEffects = ['reveal_dark', 'detect_ghost', 'weaken', 'temp_detect'];
+  const captureEffects = ['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'];
+
+  // Pisahkan alat investigasi dasar vs lainnya
+  const investTools = tools.filter(t => investEffects.includes(t.effect));
+  const otherTools  = tools.filter(t => !investEffects.includes(t.effect));
+
+  let html = '';
+
+  // === SECTION: Investigasi Dasar (clickable) ===
+  if (investTools.length > 0) {
+    html += `<div style="font-family:VT323,monospace;font-size:12px;color:var(--kuning-bright);letter-spacing:2px;padding:8px 14px 4px;border-bottom:1px solid rgba(240,200,64,0.15);">⚡ INVESTIGASI DASAR — Ketuk untuk pakai</div>`;
+    html += investTools.map(t => {
+      const canUse = t.uses > 0;
+      const label  = canUse ? `${t.uses} sisa` : 'Habis';
+      const onclick = canUse
+        ? `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_t)useTool(_t);})()`
+        : '';
+      return `<button onclick="${onclick}"
+        style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;
+               background:${canUse ? 'rgba(240,200,64,0.07)' : 'transparent'};
+               border:none;border-bottom:1px solid rgba(240,200,64,0.12);
+               border-left:3px solid ${canUse ? 'var(--kuning-glow)' : 'transparent'};
+               cursor:${canUse ? 'pointer' : 'not-allowed'};
+               opacity:${canUse ? 1 : 0.4};
+               -webkit-tap-highlight-color:transparent;">
         <span style="font-size:24px;">${t.emoji}</span>
         <div style="flex:1;text-align:left;">
-          <div style="font-family:VT323,monospace;font-size:18px;color:var(--text-bright);">${t.name}</div>
+          <div style="font-family:VT323,monospace;font-size:18px;color:var(--kuning-bright);">${t.name}</div>
           <div style="font-family:VT323,monospace;font-size:13px;color:var(--abu-light);">${label}</div>
         </div>
+        ${canUse ? '<span style="font-family:VT323,monospace;font-size:13px;color:var(--kuning-glow);">▶ PAKAI</span>' : ''}
       </button>`;
     }).join('');
+  } else {
+    html += `<div style="font-family:VT323,monospace;font-size:14px;color:var(--merah-glow);padding:12px 14px;border-bottom:1px solid rgba(74,74,74,0.2);">⚠️ Tidak ada alat investigasi! Beli Senter di Toko.</div>`;
   }
+
+  // === SECTION: Alat lain (view only) ===
+  if (otherTools.length > 0) {
+    html += `<div style="font-family:VT323,monospace;font-size:12px;color:var(--abu-light);letter-spacing:2px;padding:10px 14px 4px;border-bottom:1px solid rgba(74,74,74,0.15);margin-top:4px;">📦 ALAT DETEKSI & TANGKAP — Digunakan saat tangkap hantu</div>`;
+    html += otherTools.map(t => {
+      const isCapture = captureEffects.includes(t.effect);
+      const catLabel  = isCapture ? 'Alat Tangkap' : 'Alat Deteksi';
+      const usesLabel = t.uses <= 0 ? 'Habis' : `${t.uses} sisa`;
+      return `<div style="display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;
+                           border-bottom:1px solid rgba(74,74,74,0.1);opacity:0.5;pointer-events:none;
+                           border-left:3px solid rgba(74,74,74,0.3);">
+        <span style="font-size:22px;">${t.emoji}</span>
+        <div style="flex:1;text-align:left;">
+          <div style="font-family:VT323,monospace;font-size:17px;color:var(--text);">${t.name}</div>
+          <div style="font-family:VT323,monospace;font-size:12px;color:var(--abu-light);">${catLabel} · ${usesLabel}</div>
+        </div>
+        <span style="font-family:VT323,monospace;font-size:11px;color:var(--abu-light);text-align:right;line-height:1.3;">Aktif saat<br>tangkap</span>
+      </div>`;
+    }).join('');
+  }
+
+  content.innerHTML = html;
   drawer.classList.add('open');
 }
 function closeMobileToolDrawer() {
