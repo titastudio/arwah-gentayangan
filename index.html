@@ -1257,7 +1257,16 @@ body::after {
   .gd-body { flex-direction:column; overflow-y:auto; }
   .gd-left { width:100%; border-right:none; border-bottom:1px solid var(--border); padding:12px; }
   .gd-center { padding:12px; }
-  .gd-right { width:100%; border-left:none; border-top:1px solid var(--border); padding:12px; }
+  /* Bug fix: panel perawatan (bersihkan, dupa, dll) harus terlihat penuh tanpa zoom */
+  .gd-right {
+    width:100%;
+    border-left:none;
+    border-top:1px solid var(--border);
+    padding:12px;
+    /* Jangan batasi tinggi — tampilkan semua opsi perawatan */
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
   .gd-portrait { font-size:60px; padding:12px; }
 
   /* ===== SHOP VIEW ===== */
@@ -1302,12 +1311,20 @@ body::after {
     flex-shrink: unset !important;
     border-left: none !important;
     border-top: 1px solid var(--border) !important;
+    /* Bug fix: kaset footage harus bisa di-scroll di mobile */
+    overflow-y: auto !important;
+    max-height: none !important;
   }
   /* TV screen: smaller on mobile */
   .tv-screen-big {
     width: 100% !important;
     height: 160px !important;
     max-width: 100% !important;
+  }
+  /* Cassette list in TV right panel must be scrollable */
+  #cassette-list {
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   /* ===== ARTIFACTS VIEW ===== */
@@ -9007,20 +9024,11 @@ function renderCaptureActions() {
     const detectTools = GAME.tools.filter(t => t.uses > 0 && DETECT_EFFECTS.includes(t.effect));
     
     if (detectTools.length === 0) {
-      // Fall back to step 1 (investigasi dasar) tools if no detection tools
-      const basicTools = GAME.tools.filter(t => t.uses > 0 && ['reveal_dark','detect_ghost','weaken','temp_detect'].includes(t.effect));
-      if (basicTools.length === 0) {
-        const msg = document.createElement('div');
-        msg.style.cssText='font-family:VT323,monospace;font-size:16px;color:var(--merah-glow);text-align:center;';
-        msg.innerHTML='⚠️ Tidak ada alat deteksi!<br/>Beli Kamera Analog / Detektor EMF / Recorder / Cermin di Toko.';
-        actions.appendChild(msg);
-      } else {
-        const hint = document.createElement('div');
-        hint.style.cssText='font-family:VT323,monospace;font-size:12px;color:var(--kuning-bright);margin-bottom:6px;text-align:center;';
-        hint.textContent='📡 Tidak ada alat deteksi — gunakan alat investigasi dasar';
-        actions.appendChild(hint);
-        basicTools.slice(0,3).forEach(tool => _buildCaptureDetectBtn(tool, actions));
-      }
+      // No detection tools — show warning, do NOT fall back to investigasi dasar (senter etc.)
+      const msg = document.createElement('div');
+      msg.style.cssText='font-family:VT323,monospace;font-size:16px;color:var(--merah-glow);text-align:center;max-width:400px;line-height:1.6;';
+      msg.innerHTML='⚠️ Tidak ada alat deteksi!<br/><span style="font-size:13px;color:var(--text)">Beli Kamera Analog, Detektor EMF, Recorder EVP, atau Cermin Ritual di Toko.<br/><b style="color:var(--kuning-bright)">Senter adalah alat Investigasi Dasar (Step 1), bukan alat Deteksi (Step 2).</b></span>';
+      actions.appendChild(msg);
     } else {
       const hint = document.createElement('div');
       hint.style.cssText='font-family:VT323,monospace;font-size:13px;color:var(--kuning-bright);margin-bottom:6px;text-align:center;';
@@ -13924,7 +13932,8 @@ function addAgencyEvent(text, good=false) {
 }
 
 function agencyDailyTick() {
-  if (!GAME.agency?.crew || !GAME.started) return;
+  // Only charge rent/salaries if agency has been unlocked by the player
+  if (!GAME.agencyUnlocked || !GAME.agency?.crew || !GAME.started) return;
   const crew = GAME.agency.crew;
   
   // Pay salaries
@@ -14654,8 +14663,30 @@ function openMobileToolDrawer() {
   const captureEffects = ['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'];
 
   // Pisahkan alat investigasi dasar vs lainnya
-  const investTools = tools.filter(t => investEffects.includes(t.effect));
-  const otherTools  = tools.filter(t => !investEffects.includes(t.effect));
+  // Deduplikasi per tool id — gabungkan uses, tampilkan satu baris per jenis
+  const investToolMap = {};
+  tools.forEach(t => {
+    if (investEffects.includes(t.effect)) {
+      if (!investToolMap[t.id]) {
+        investToolMap[t.id] = {...t, uses: t.uses}; // clone
+      } else {
+        investToolMap[t.id].uses += t.uses; // aggregate uses across duplicates
+      }
+    }
+  });
+  const investTools = Object.values(investToolMap);
+
+  const otherToolMap = {};
+  tools.forEach(t => {
+    if (!investEffects.includes(t.effect)) {
+      if (!otherToolMap[t.id]) {
+        otherToolMap[t.id] = {...t, uses: t.uses};
+      } else {
+        otherToolMap[t.id].uses += t.uses;
+      }
+    }
+  });
+  const otherTools = Object.values(otherToolMap);
 
   let html = '';
 
@@ -14666,7 +14697,7 @@ function openMobileToolDrawer() {
       const canUse = t.uses > 0;
       const label  = canUse ? `${t.uses} sisa` : 'Habis';
       const onclick = canUse
-        ? `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_t)useInvestigasiDasar(_t);})()`
+        ? `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}'&&tt.uses>0;});if(_t)useInvestigasiDasar(_t);else{var _a=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_a)useInvestigasiDasar(_a);}})()`
         : '';
       return `<button onclick="${onclick}"
         style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;
