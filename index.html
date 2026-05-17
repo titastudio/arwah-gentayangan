@@ -6466,11 +6466,13 @@ function renderExplore(loc) {
   // Player
   document.getElementById('player-cursor').style.cssText = 'left:50%;top:50%;';
   
-  // Mouse move for dialogue discovery (replaces detector scan)
-  fp.onmousemove = (e) => {
+  // Mouse/Touch move for dialogue discovery (replaces detector scan)
+  const _fpMoveHandler = (e) => {
     const rect = fp.getBoundingClientRect();
-    const px = ((e.clientX-rect.left)/rect.width)*100;
-    const py = ((e.clientY-rect.top)/rect.height)*100;
+    let clientX = e.clientX, clientY = e.clientY;
+    if (e.touches && e.touches[0]) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    const px = ((clientX-rect.left)/rect.width)*100;
+    const py = ((clientY-rect.top)/rect.height)*100;
     exploreState.playerX = px;
     exploreState.playerY = py;
     document.getElementById('player-cursor').style.left = px+'%';
@@ -6490,6 +6492,8 @@ function renderExplore(loc) {
       }
     }
   };
+  fp.onmousemove = _fpMoveHandler;
+  fp.addEventListener('touchmove', _fpMoveHandler, {passive:true});
   
   // Render tool panel
   renderNewToolPanel();
@@ -6991,7 +6995,7 @@ function completeMechanic(tool) {
 
 // ── SENTER: Mode gelap, gerakkan kursor ke hotspot merah ──
 function buildSenterMechanic(desc, area, tool, panel) {
-  desc.textContent = '🔦 Mode Gelap Aktif! Gerakkan kursor di area ruangan untuk menerangi sudut tersembunyi, klik saat target menyala!';
+  desc.textContent = '🔦 Mode Gelap Aktif! Gerakkan jari/kursor di area ruangan untuk menerangi sudut tersembunyi, ketuk saat target menyala!';
   
   // Create dark overlay with flashlight effect on the floor plan
   const fp = document.getElementById('floor-plan');
@@ -7009,21 +7013,21 @@ function buildSenterMechanic(desc, area, tool, panel) {
   
   // Remove mechanic panel (already in explore-top) — show instruction as HUD
   panel.style.display = 'none';
-  addLog('🔦 Senter ON — Gerakkan kursor untuk menerangi area ruangan. Klik saat menemukan sesuatu!', 'important');
+  addLog('🔦 Senter ON — Gerakkan jari/kursor untuk menerangi area ruangan. Ketuk saat menemukan sesuatu!', 'important');
   
   let done = false;
   const onMove = (e) => {
     if (done) return;
     const rect = fp.getBoundingClientRect();
-    const mx = ((e.clientX - rect.left)/rect.width*100).toFixed(1);
-    const my = ((e.clientY - rect.top)/rect.height*100).toFixed(1);
-    const px = (e.clientX - rect.left);
-    const py = (e.clientY - rect.top);
+    let clientX = e.clientX, clientY = e.clientY;
+    if (e.touches && e.touches[0]) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    const px = (clientX - rect.left);
+    const py = (clientY - rect.top);
     darkOverlay.style.background = `radial-gradient(circle 80px at ${px}px ${py}px, transparent 60%, rgba(0,0,0,0.96) 100%)`;
-    darkOverlay.style.boxShadow = `inset 0 0 0 9999px rgba(0,0,0,0)`;
   };
   
   fp.addEventListener('mousemove', onMove);
+  fp.addEventListener('touchmove', onMove, {passive:true});
   
   // Make hotspots clickable to complete mechanic
   const loc = exploreState.loc;
@@ -7037,6 +7041,7 @@ function buildSenterMechanic(desc, area, tool, panel) {
     if (done) return;
     done = true;
     fp.removeEventListener('mousemove', onMove);
+    fp.removeEventListener('touchmove', onMove);
     darkOverlay.remove();
     if (hsEl) { hsEl.style.zIndex = ''; }
     panel.style.display = 'none';
@@ -7076,6 +7081,7 @@ function buildSenterMechanic(desc, area, tool, panel) {
   setTimeout(() => {
     if (done) return;
     fp.removeEventListener('mousemove', onMove);
+    fp.removeEventListener('touchmove', onMove);
     darkOverlay.remove();
     if (hsEl) { hsEl.style.zIndex = ''; hsEl.removeEventListener('click', onHsClick); }
     if (panel.parentNode) panel.remove();
@@ -8785,21 +8791,25 @@ function buildSenterCaptureMode(desc, area, tool, panel, done) {
   const tx = 40 + Math.random()*240, ty = 30 + Math.random()*140;
   ctx.fillStyle = 'rgba(192,57,43,0.6)'; ctx.beginPath(); ctx.arc(tx,ty,10,0,Math.PI*2); ctx.fill();
   area.appendChild(canvas);
-  canvas.onmousemove = (e) => {
+  const _senterDraw = (clientX, clientY) => {
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX-r.left, my = e.clientY-r.top;
+    const mx = clientX-r.left, my = clientY-r.top;
     ctx.fillStyle='#050402'; ctx.fillRect(0,0,320,200);
     ctx.save(); ctx.beginPath(); ctx.arc(mx,my,50,0,Math.PI*2); ctx.clip();
     ctx.fillStyle='rgba(240,200,64,0.08)'; ctx.fillRect(0,0,320,200);
     ctx.fillStyle='rgba(192,57,43,0.8)'; ctx.beginPath(); ctx.arc(tx,ty,10,0,Math.PI*2); ctx.fill();
     ctx.restore();
   };
-  canvas.onclick = (e) => {
+  const _senterHit = (clientX, clientY) => {
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX-r.left, my = e.clientY-r.top;
+    const mx = clientX-r.left, my = clientY-r.top;
     if (Math.sqrt((mx-tx)**2+(my-ty)**2)<35) done();
     else { ctx.fillStyle='rgba(192,57,43,0.3)'; ctx.fillRect(0,0,320,200); }
   };
+  canvas.onmousemove = (e) => { _senterDraw(e.clientX, e.clientY); };
+  canvas.ontouchmove = (e) => { e.preventDefault(); if(e.touches[0]) _senterDraw(e.touches[0].clientX, e.touches[0].clientY); };
+  canvas.onclick = (e) => { _senterHit(e.clientX, e.clientY); };
+  canvas.ontouchend = (e) => { e.preventDefault(); const t=e.changedTouches[0]; if(t) _senterHit(t.clientX, t.clientY); };
   const cancelBtn = document.createElement('button');
   cancelBtn.className='btn-main red'; cancelBtn.style.cssText='font-size:13px;padding:5px 14px;';
   cancelBtn.textContent='✗ Batal';
@@ -8834,8 +8844,14 @@ function buildDupaCaptureMode(desc, area, tool, panel, done) {
   let held=false,pct=0,iv=null;
   const holdBtn=document.createElement('button'); holdBtn.className='btn-main yellow'; holdBtn.style.cssText='font-size:16px;padding:10px 24px;';
   holdBtn.textContent='🔥 Tahan untuk Bakar';
-  holdBtn.addEventListener('mousedown',()=>{held=true;iv=setInterval(()=>{pct=Math.min(100,pct+4);fill.style.width=pct+'%';if(pct>=100){clearInterval(iv);done();}},80);});
-  holdBtn.addEventListener('mouseup',()=>{held=false;clearInterval(iv);pct=Math.max(0,pct-30);fill.style.width=pct+'%';});
+  const _dupaCaptureStart=(e)=>{e.preventDefault();if(held)return;held=true;iv=setInterval(()=>{pct=Math.min(100,pct+4);fill.style.width=pct+'%';if(pct>=100){clearInterval(iv);done();}},80);};
+  const _dupaCaptureEnd=(e)=>{held=false;clearInterval(iv);pct=Math.max(0,pct-30);fill.style.width=pct+'%';};
+  holdBtn.addEventListener('mousedown',_dupaCaptureStart);
+  holdBtn.addEventListener('mouseup',_dupaCaptureEnd);
+  holdBtn.addEventListener('mouseleave',_dupaCaptureEnd);
+  holdBtn.addEventListener('touchstart',_dupaCaptureStart,{passive:false});
+  holdBtn.addEventListener('touchend',_dupaCaptureEnd);
+  holdBtn.addEventListener('touchcancel',_dupaCaptureEnd);
   area.appendChild(holdBtn);
   const cancelBtn=document.createElement('button'); cancelBtn.className='btn-main red'; cancelBtn.style.cssText='font-size:13px;padding:5px 14px;margin-top:8px;';
   cancelBtn.textContent='✗ Batal'; cancelBtn.onclick=()=>{ clearInterval(iv); _toolMechanicActive=false; panel.remove(); captureState.stage=1; updateCaptureScreen(); };
@@ -8875,8 +8891,14 @@ function buildKameraAnalogCapture(desc, area, tool, panel, done) {
   status.textContent='Tahan tombol kamera...'; area.appendChild(status);
   const btn=document.createElement('button'); btn.className='btn-main green'; btn.style.cssText='font-size:16px;padding:10px 24px;';
   btn.textContent='📷 Tahan Shutter';
-  btn.addEventListener('mousedown',()=>{held=true;iv=setInterval(()=>{elapsed+=50;fill.style.width=Math.min(100,elapsed/20)+'%';if(elapsed>=2000){clearInterval(iv);status.textContent='✅ FOTO PARANORMAL TERAMBIL!';setTimeout(done,600);}},50);});
-  btn.addEventListener('mouseup',()=>{held=false;clearInterval(iv);elapsed=0;fill.style.width='0%';status.textContent='Lepas! Ulangi — tahan penuh 2 detik.';});
+  const _camStart=(e)=>{e.preventDefault();if(held)return;held=true;iv=setInterval(()=>{elapsed+=50;fill.style.width=Math.min(100,elapsed/20)+'%';if(elapsed>=2000){clearInterval(iv);status.textContent='✅ FOTO PARANORMAL TERAMBIL!';setTimeout(done,600);}},50);};
+  const _camEnd=()=>{held=false;clearInterval(iv);elapsed=0;fill.style.width='0%';status.textContent='Lepas! Ulangi — tahan penuh 2 detik.';};
+  btn.addEventListener('mousedown',_camStart);
+  btn.addEventListener('mouseup',_camEnd);
+  btn.addEventListener('mouseleave',_camEnd);
+  btn.addEventListener('touchstart',_camStart,{passive:false});
+  btn.addEventListener('touchend',_camEnd);
+  btn.addEventListener('touchcancel',_camEnd);;
   area.appendChild(btn);
   const cancelBtn=document.createElement('button'); cancelBtn.className='btn-main red'; cancelBtn.style.cssText='font-size:13px;padding:5px 14px;margin-top:8px;';
   cancelBtn.textContent='✗ Batal'; cancelBtn.onclick=()=>{clearInterval(iv);_toolMechanicActive=false;panel.remove();captureState.stage=1;updateCaptureScreen();};
@@ -12945,7 +12967,7 @@ function openRitualDraw(g1, g2) {
   
   drawRitualPattern(ctx, canvas);
   
-  document.getElementById('ritual-hint').textContent = `Gambar garis mengikuti titik merah (${pts} titik) — tahan mouse dan seret!`;
+  document.getElementById('ritual-hint').textContent = `Gambar garis mengikuti titik merah (${pts} titik) — tahan dan seret jari/mouse!`;
   document.getElementById('ritual-progress-fill').style.width = '0%';
   document.getElementById('ritual-pct').textContent = '0%';
   
