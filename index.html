@@ -14644,7 +14644,7 @@ function openMobileToolDrawer() {
       const canUse = t.uses > 0;
       const label  = canUse ? `${t.uses} sisa` : 'Habis';
       const onclick = canUse
-        ? `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_t)useTool(_t);})()`
+        ? `closeMobileToolDrawer();(function(){var _t=GAME.tools.find(function(tt){return tt.id==='${t.id}';});if(_t)useInvestigasiDasar(_t);})()`
         : '';
       return `<button onclick="${onclick}"
         style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;
