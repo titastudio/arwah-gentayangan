@@ -1055,6 +1055,267 @@ body::after {
   #nav-nextday { font-size:11px; padding:3px 5px; }
 }
 
+/* ============================================================
+   MOBILE RESPONSIVE — Portrait phone ≤ 480px
+   Desktop layout TIDAK berubah sama sekali.
+   Strategi: HUD atas = stats saja, nav pindah ke bottom bar
+   ============================================================ */
+@media(max-width:480px) {
+
+  /* Pastikan body bisa scroll konten utama */
+  body { overflow: hidden; }
+
+  /* APP container */
+  #app {
+    width:100vw; height:100vh;
+    display:flex; flex-direction:column;
+  }
+
+  /* ===== TOP HUD: hanya logo + stats, tanpa nav ===== */
+  #hud {
+    display:none !important; /* disembunyikan, diganti #mobile-hud */
+  }
+  #hud.visible {
+    display:none !important;
+  }
+
+  /* Mobile HUD pengganti — ditampilkan oleh JS saat game started */
+  #mobile-hud {
+    flex-direction:column;
+    background:linear-gradient(180deg,rgba(5,4,2,0.98) 0%,rgba(10,8,4,0.95) 100%);
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+    z-index:100;
+    position:relative;
+  }
+
+  /* Baris atas: logo + stats */
+  #mobile-hud-top {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 10px;
+    gap:6px;
+  }
+
+  #mobile-hud-logo {
+    font-family:'VT323',monospace;
+    font-size:18px;
+    color:var(--hijau-glow);
+    text-shadow:var(--glow-green);
+    letter-spacing:2px;
+    flex-shrink:0;
+  }
+
+  #mobile-hud-stats {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex:1;
+    justify-content:flex-end;
+    flex-wrap:nowrap;
+  }
+
+  .m-stat {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:'VT323',monospace;
+    line-height:1;
+  }
+  .m-stat .m-icon { font-size:13px; }
+  .m-stat .m-val  { font-size:16px; color:var(--kuning-bright); }
+
+  /* Info hari + jam + cuaca */
+  #mobile-hud-info {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 10px 5px;
+    font-family:'VT323',monospace;
+    font-size:13px;
+    color:var(--abu-light);
+    border-top:1px solid rgba(74,140,74,0.1);
+  }
+  #mobile-hud-info .m-day  { color:var(--hijau-glow); }
+  #mobile-hud-info .m-time { color:var(--kuning-bright); }
+  #mobile-hud-info .m-weather { color:var(--abu-light); }
+
+  /* ===== GAME AREA: flex-grow, overflow scroll ===== */
+  #game-area {
+    flex:1;
+    overflow:hidden;
+    position:relative;
+    padding-bottom:0; /* bottom nav ada di luar #game-area */
+  }
+
+  /* ===== BOTTOM NAV BAR — ditampilkan oleh JS saat game started ===== */
+  #mobile-bottom-nav {
+    flex-direction:row;
+    background:rgba(5,4,2,0.98);
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+    z-index:200;
+    padding:4px 2px env(safe-area-inset-bottom, 4px);
+    overflow:visible;
+    position:relative;
+  }
+
+  /* Tombol nav utama (2 baris: 5 atas + 5 bawah tidak muat, pakai 1 baris 10 item) */
+  #mobile-bottom-nav .m-nav-btn {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1px;
+    padding:4px 2px;
+    cursor:pointer;
+    background:transparent;
+    border:none;
+    border-top:2px solid transparent;
+    transition:all 0.15s;
+    min-width:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  #mobile-bottom-nav .m-nav-btn .mn-icon {
+    font-size:16px;
+    line-height:1;
+  }
+
+  #mobile-bottom-nav .m-nav-btn .mn-label {
+    font-family:'VT323',monospace;
+    font-size:9px;
+    color:var(--abu-light);
+    letter-spacing:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+    text-align:center;
+  }
+
+  #mobile-bottom-nav .m-nav-btn.active {
+    border-top-color:var(--hijau-glow);
+  }
+  #mobile-bottom-nav .m-nav-btn.active .mn-label {
+    color:var(--hijau-glow);
+  }
+
+  /* Tombol Hari Baru — warna kuning, sedikit lebih lebar */
+  #mobile-bottom-nav .m-nav-btn.nextday {
+    border-top-color:var(--kuning) !important;
+    flex:1.2;
+  }
+  #mobile-bottom-nav .m-nav-btn.nextday .mn-label {
+    color:var(--kuning-bright);
+  }
+
+  /* ===== VIEWS: full height sesuai sisa layar ===== */
+  .view { overflow-y:auto; overflow-x:hidden; }
+  .screen { overflow-y:auto; }
+
+  /* ===== INTRO SCREEN mobile ===== */
+  #screen-intro { padding:20px 12px; gap:16px; }
+  .intro-tv { width:100%; max-width:100%; padding:24px 12px 48px; }
+  .tv-screen { min-height:220px; padding:20px 12px; }
+  .game-title { font-size:30px; letter-spacing:2px; }
+  .game-subtitle { font-size:13px; }
+  .game-tagline { font-size:16px; }
+  .intro-options { gap:8px; }
+  .btn-main { font-size:22px; padding:10px 28px; }
+
+  /* ===== MAP VIEW ===== */
+  .map-header { padding:12px; }
+  .map-header h2 { font-size:22px; }
+  .map-grid {
+    grid-template-columns:1fr;
+    padding:10px;
+    gap:10px;
+  }
+  .location-card { min-height:auto; padding:12px; }
+
+  /* ===== EXPLORE VIEW ===== */
+  #view-explore { flex-direction:column; }
+  .explore-left { display:none !important; } /* panel alat disembunyikan, gunakan mode tap */
+  .explore-right { width:100%; }
+  .explore-bottom { height:120px; }
+
+  /* ===== COLLECTION VIEW ===== */
+  .collection-header { padding:10px 12px; flex-wrap:wrap; gap:6px; }
+  .collection-header h2 { font-size:22px; }
+  .collection-filters { flex-wrap:wrap; gap:4px; }
+  .filter-btn { font-size:12px; padding:3px 8px; }
+  .collection-grid { grid-template-columns:repeat(3,1fr); padding:10px; gap:8px; }
+  .ghost-card .ghost-emoji { font-size:36px; }
+  .ghost-card .ghost-card-name { font-size:14px; }
+
+  /* ===== GHOST DETAIL overlay ===== */
+  .gd-body { flex-direction:column; overflow-y:auto; }
+  .gd-left { width:100%; border-right:none; border-bottom:1px solid var(--border); padding:12px; }
+  .gd-center { padding:12px; }
+  .gd-right { width:100%; border-left:none; border-top:1px solid var(--border); padding:12px; }
+  .gd-portrait { font-size:60px; padding:12px; }
+
+  /* ===== SHOP VIEW ===== */
+  .shop-grid { grid-template-columns:1fr; padding:10px; gap:10px; }
+
+  /* ===== MARKET VIEW ===== */
+  .market-body { flex-direction:column; }
+  .market-left { border-right:none; border-bottom:1px solid var(--border); max-height:50vh; }
+  .market-right { width:100%; max-height:none; }
+  .market-monitor { margin:8px; max-height:200px; }
+
+  /* ===== PEDIA VIEW ===== */
+  .pedia-body { flex-direction:column; }
+  .pedia-list { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:40vh; }
+  .pedia-content { max-height:none; }
+
+  /* ===== MISSIONS VIEW ===== */
+  .missions-body { flex-direction:column; }
+  .missions-left { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:40vh; overflow-y:auto; }
+  .missions-right { flex:1; overflow-y:auto; }
+
+  /* ===== AGENCY VIEW ===== */
+  .agency-body { flex-direction:column; }
+  .agency-left { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:45vh; }
+  .agency-right { padding:12px; }
+
+  /* ===== TV VIEW ===== */
+  .tv-body { flex-direction:column; }
+  .tv-left { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:35vh; }
+
+  /* ===== ARTIFACTS VIEW ===== */
+  .artifacts-grid { grid-template-columns:1fr 1fr; padding:10px; gap:8px; }
+
+  /* ===== CAPTURE OVERLAY ===== */
+  #capture-guide-panel { display:none; }
+  #capture-stage-area { padding:10px 12px; }
+  #capture-ghost-box { min-width:0; padding:14px 16px; }
+
+  /* ===== PUZZLE OVERLAY ===== */
+  #puzzle-overlay { padding:16px 12px; }
+  .puzzle-title { font-size:26px; }
+  .puzzle-desc { font-size:13px; }
+
+  /* ===== ROOM SELECT overlay ===== */
+  #room-select-overlay { padding:20px 12px; }
+  #room-select-loc-title { font-size:26px; letter-spacing:4px; }
+  .room-select-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .room-select-card { padding:18px 10px 14px; min-height:120px; }
+  .rsc-icon { font-size:30px; margin-bottom:8px; }
+  .rsc-name { font-size:17px; }
+
+  /* ===== NOTIFICATIONS — naik di atas bottom nav ===== */
+  #notif-container {
+    top: auto !important;
+    bottom: 68px !important;
+    right: 8px !important;
+    left: 8px !important;
+  }
+}
+
 /* Mission view fixed layout */
 #view-missions { overflow:hidden; }
 #view-missions > div { overflow:hidden; }
@@ -1475,6 +1736,25 @@ body::after {
 </div>
 
 <div id="app">
+
+  <!-- ===== MOBILE HUD (hanya tampil di ≤480px via CSS) ===== -->
+  <div id="mobile-hud" style="display:none;">
+    <div id="mobile-hud-top">
+      <div id="mobile-hud-logo">👻 AG</div>
+      <div id="mobile-hud-stats">
+        <div class="m-stat"><span class="m-icon">💰</span><span class="m-val" id="m-hud-money">0</span></div>
+        <div class="m-stat"><span class="m-icon">👻</span><span class="m-val" id="m-hud-ghosts">0</span></div>
+        <div class="m-stat"><span class="m-icon">⭐</span><span class="m-val" id="m-hud-fame">0</span></div>
+        <div class="m-stat"><span class="m-icon">🧿</span><span class="m-val" id="m-hud-artifacts">0</span></div>
+      </div>
+    </div>
+    <div id="mobile-hud-info">
+      <span class="m-day" id="m-hud-day">Hari 1</span>
+      <span class="m-time" id="m-hud-time">🕯️ 21:00</span>
+      <span class="m-weather" id="m-hud-weather">Cerah</span>
+    </div>
+  </div>
+
   <!-- HUD -->
   <div id="hud">
     <div class="hud-left">
@@ -1568,6 +1848,7 @@ body::after {
     </div>
 
     <!-- DEBT & TUYUL PANEL (floating sidebar in missions view — injected via JS) -->
+    <div class="view" id="view-map">
       <div class="map-header">
         <h2>🗺️ PETA LOKASI ANGKER</h2>
         <div style="font-family:'VT323',monospace;font-size:16px;color:var(--abu-light);">Pilih lokasi untuk investigasi</div>
@@ -1925,6 +2206,51 @@ body::after {
     </div>
 
   </div>
+
+  <!-- ===== MOBILE BOTTOM NAV (hanya tampil di ≤480px via CSS) ===== -->
+  <div id="mobile-bottom-nav" style="display:none;">
+    <button class="m-nav-btn nextday" onclick="tryAdvanceDay()" id="m-nav-nextday">
+      <span class="mn-icon">🌙</span>
+      <span class="mn-label">Hari Baru</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('missions');mobileNavActive('m-nav-missions')" id="m-nav-missions">
+      <span class="mn-icon">📋</span>
+      <span class="mn-label">Misi</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('map');mobileNavActive('m-nav-map')" id="m-nav-map">
+      <span class="mn-icon">🗺️</span>
+      <span class="mn-label">Peta</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('collection');mobileNavActive('m-nav-collection')" id="m-nav-collection">
+      <span class="mn-icon">👻</span>
+      <span class="mn-label">Koleksi</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('shop');mobileNavActive('m-nav-shop')" id="m-nav-shop">
+      <span class="mn-icon">🏪</span>
+      <span class="mn-label">Toko</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('market');mobileNavActive('m-nav-market')" id="m-nav-market">
+      <span class="mn-icon">💰</span>
+      <span class="mn-label">Pasar</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('pedia');mobileNavActive('m-nav-pedia')" id="m-nav-pedia">
+      <span class="mn-icon">📖</span>
+      <span class="mn-label">Pedia</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('tv');mobileNavActive('m-nav-tv')" id="m-nav-tv">
+      <span class="mn-icon">📺</span>
+      <span class="mn-label">TV</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('agency');mobileNavActive('m-nav-agency')" id="m-nav-agency" style="--m-active-color:#c080ff;">
+      <span class="mn-icon">🏢</span>
+      <span class="mn-label">Agensi</span>
+    </button>
+    <button class="m-nav-btn" onclick="showView('artifacts');mobileNavActive('m-nav-artifacts')" id="m-nav-artifacts" style="--m-active-color:#cd853f;">
+      <span class="mn-icon">🧿</span>
+      <span class="mn-label">Artifak</span>
+    </button>
+  </div>
+
 </div>
 
 <!-- NIGHT EVENT OVERLAY -->
@@ -4825,17 +5151,68 @@ function updateHUD() {
     if (aggressiveTuyul>0) { colBtn.style.borderColor='#ff4444'; colBtn.style.color='#ff4444'; }
     else { colBtn.style.borderColor='rgba(154,74,255,0.5)'; colBtn.style.color='#c080ff'; }
   }
+
+  // === SYNC MOBILE HUD ===
+  updateMobileHUD();
 }
+
+// Sync mobile HUD stats dari GAME state
+function updateMobileHUD() {
+  const isMobile = window.innerWidth <= 480;
+  const mHud = document.getElementById('mobile-hud');
+  const mNav = document.getElementById('mobile-bottom-nav');
+  const hudEl = document.getElementById('hud');
+
+  if (isMobile && GAME.started) {
+    if (mHud) mHud.style.display = 'flex';
+    if (mNav) mNav.style.display = 'flex';
+    if (hudEl) hudEl.style.display = 'none';
+  } else if (isMobile && !GAME.started) {
+    if (mHud) mHud.style.display = 'none';
+    if (mNav) mNav.style.display = 'none';
+  }
+
+  const el = (id) => document.getElementById(id);
+  if (el('m-hud-money'))    el('m-hud-money').textContent    = (GAME.money||0).toLocaleString('id');
+  if (el('m-hud-ghosts'))   el('m-hud-ghosts').textContent   = (GAME.ghosts||[]).length;
+  if (el('m-hud-fame'))     el('m-hud-fame').textContent     = GAME.fame||0;
+  if (el('m-hud-artifacts'))el('m-hud-artifacts').textContent= (GAME.artifacts||[]).length;
+  if (el('m-hud-day'))      el('m-hud-day').textContent      = 'Hari '+(GAME.day||1);
+  if (el('m-hud-time'))     el('m-hud-time').textContent     = '🕯️ '+formatGameTime(GAME.gameHour||21);
+  if (el('m-hud-weather'))  el('m-hud-weather').textContent  = GAME.weather||'Cerah';
+
+  // Hari Baru button opacity (mobile)
+  const mNextDay = el('m-nav-nextday');
+  if (mNextDay) {
+    mNextDay.style.opacity = (GAME.locationsExploredToday||0) === 0 ? '0.45' : '1';
+  }
+}
+
+// Aktifkan tombol bottom nav yang dipilih
+function mobileNavActive(btnId) {
+  document.querySelectorAll('#mobile-bottom-nav .m-nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
+}
+
+// Tangani resize (misal rotate phone)
+window.addEventListener('resize', () => {
+  updateMobileHUD();
+});
 
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const v = document.getElementById('view-'+viewId);
   if (v) {
     v.classList.add('active');
-    // Nav highlight
+    // Nav highlight (desktop)
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     const nb = document.getElementById('nav-'+viewId);
     if (nb) nb.classList.add('active');
+    // Nav highlight (mobile bottom nav)
+    document.querySelectorAll('#mobile-bottom-nav .m-nav-btn').forEach(b=>b.classList.remove('active'));
+    const mnb = document.getElementById('m-nav-'+viewId);
+    if (mnb) mnb.classList.add('active');
     // Render
     if (viewId==='map') renderMap();
     if (viewId==='collection') renderCollection();
@@ -10584,12 +10961,15 @@ function runAuctionBidding(ghost, askPrice, auctionType) {
         const willBid = !isRaid && Math.random() > noBidProb;
         if (willBid) {
           hasBid = true;
-          // Each subsequent bidder must beat the current highest bid
-          const baseForBid = highestBid > 0 ? highestBid : askPrice;
-          const bidAmount = Math.floor(Math.max(
-            highestBid + 1,
-            baseForBid * (1.01 + Math.random() * 0.12) * typeMod.bidMulti * (mood.auctionBidBonus || 1)
-          ));
+          // Penawar pertama: harus >= askPrice. Penawar berikutnya: harus > highestBid.
+          const isFirstBid = highestBid === 0;
+          const baseForBid = isFirstBid ? askPrice : highestBid;
+          // Multiplier hanya boleh meningkatkan dari base, bukan mengurangi
+          const multiplier = 1.01 + Math.random() * 0.12;
+          // Untuk penawar pertama: kalikan dari askPrice, pastikan >= askPrice
+          // Untuk penawar berikutnya: kalikan dari highestBid, pastikan > highestBid
+          const rawBid = Math.floor(baseForBid * multiplier * (isFirstBid ? 1 : typeMod.bidMulti) * (isFirstBid ? 1 : (mood.auctionBidBonus || 1)));
+          const bidAmount = Math.max(isFirstBid ? askPrice : highestBid + 1, rawBid);
           if (bidAmount > highestBid) { highestBid = bidAmount; highestBidder = buyer; }
           addLog(`${buyer.emoji} ${buyer.name}: "Aku tawarkan Rp${bidAmount.toLocaleString('id')}!"`, 'var(--hijau-glow)');
           
@@ -10609,7 +10989,7 @@ function runAuctionBidding(ghost, askPrice, auctionType) {
               // Capture current highestBid in closure so counter is always above it
               const baseForCounter = highestBid;
               setTimeout(() => {
-                const counter = Math.floor(baseForCounter * (1.02 + Math.random() * 0.08));
+                const counter = Math.max(highestBid + 1, Math.floor(baseForCounter * (1.02 + Math.random() * 0.08)));
                 if (counter > highestBid) { highestBid = counter; highestBidder = counterBuyer; }
                 addLog(`${counterBuyer.emoji} ${counterBuyer.name}: "Aku naikkan! Rp${counter.toLocaleString('id')}!"`, 'var(--kuning-bright)');
               }, 1000);
@@ -12016,7 +12396,9 @@ function startGame(isNew) {
     changeWeather(); // set initial random weather
     scheduleWeatherChange(); // start independent weather clock
     updateHUD();
+    updateMobileHUD(); // sync mobile HUD
     showView('missions');
+    mobileNavActive('m-nav-missions');
     setTimeout(()=>showTutorial(0), 500);
   } else {
     document.getElementById('loading').style.display='none';
@@ -12032,7 +12414,9 @@ function startGame(isNew) {
     if (GAME._pendingCaptureGhost === undefined) GAME._pendingCaptureGhost = null;
     scheduleWeatherChange(); // resume independent weather clock
     updateHUD();
+    updateMobileHUD(); // sync mobile HUD
     showView('missions');
+    mobileNavActive('m-nav-missions');
     notify('✅ Data tersimpan berhasil dimuat!','success');
   // Ensure all new state fields exist
   if (!GAME.agency) GAME.agency = {crew:[], officeUpgrades:[], events:[], hasEditor:false, hasDriver:false, containmentActive:false};
