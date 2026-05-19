@@ -46,7 +46,7 @@ body {
   position: relative;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-y;
+  touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -1903,7 +1903,7 @@ html { scroll-behavior: smooth; }
 /* Hamburger drawer overlay */
 #hamburger-overlay {
   display:none;
-  position:fixed; inset:0; z-index:8000;
+  position:fixed; inset:0; z-index:9600;
   background:rgba(0,0,0,0.6);
 }
 #hamburger-overlay.open { display:block; }
@@ -1911,12 +1911,14 @@ html { scroll-behavior: smooth; }
 /* Drawer panel */
 #hamburger-drawer {
   position:fixed; top:0; right:-280px; bottom:0;
-  width:270px; z-index:8001;
+  width:270px; z-index:9601;
   background:rgba(5,4,2,0.99);
   border-left:1px solid var(--border);
   display:flex; flex-direction:column;
   transition:right 0.25s ease;
   box-shadow:-4px 0 24px rgba(0,0,0,0.8);
+  touch-action: manipulation;
+  overscroll-behavior: contain;
 }
 #hamburger-drawer.open { right:0; }
 
@@ -1946,6 +1948,7 @@ html { scroll-behavior: smooth; }
   color:var(--text); letter-spacing:1px;
   text-align:left;
   -webkit-tap-highlight-color:transparent;
+  touch-action: manipulation;
   transition:background 0.15s;
 }
 .drawer-nav-item:hover, .drawer-nav-item:active { background:rgba(74,140,74,0.1); color:var(--hijau-glow); }
@@ -1979,13 +1982,14 @@ html { scroll-behavior: smooth; }
 /* Tool picker drawer (mobile explore) */
 #mobile-tool-drawer {
   display:none;
-  position:fixed; bottom:0; left:0; right:0; z-index:3000;
+  position:fixed; bottom:0; left:0; right:0; z-index:9602;
   background:rgba(5,4,2,0.99);
   border-top:1px solid var(--border);
   border-radius:12px 12px 0 0;
   padding:12px 12px 24px;
   max-height:65vh; overflow-y:auto;
   animation:slideUpDrawer 0.2s ease;
+  touch-action: pan-y;
 }
 #mobile-tool-drawer.open { display:block; }
 @keyframes slideUpDrawer { from{transform:translateY(100%)} to{transform:translateY(0)} }
@@ -2417,57 +2421,6 @@ html { scroll-behavior: smooth; }
       <span class="m-time" id="m-hud-time">🕯️ 21:00</span>
       <span class="m-weather" id="m-hud-weather">Cerah</span>
     </div>
-  </div>
-
-  <!-- HAMBURGER OVERLAY -->
-  <div id="hamburger-overlay" onclick="closeHamburger()"></div>
-  <!-- HAMBURGER DRAWER -->
-  <div id="hamburger-drawer">
-    <div id="drawer-header">
-      <span>☰ MENU</span>
-      <button id="drawer-close" onclick="closeHamburger()">✕</button>
-    </div>
-    <div id="drawer-nav-list">
-      <button class="drawer-nav-item nextday-item" onclick="closeHamburger();tryAdvanceDay();" id="d-nav-nextday">
-        <span class="di-icon">🌙</span> Hari Baru
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('missions');mobileNavActive('m-nav-missions');" id="d-nav-missions">
-        <span class="di-icon">📋</span> Misi
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('map');mobileNavActive('m-nav-map');" id="d-nav-map">
-        <span class="di-icon">🗺️</span> Peta Lokasi
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('collection');mobileNavActive('m-nav-collection');" id="d-nav-collection">
-        <span class="di-icon">👻</span> Koleksi Hantu
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('shop');mobileNavActive('m-nav-shop');" id="d-nav-shop">
-        <span class="di-icon">🏪</span> Toko Alat
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('market');mobileNavActive('m-nav-market');" id="d-nav-market">
-        <span class="di-icon">💰</span> Pasar Gaib
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('pedia');mobileNavActive('m-nav-pedia');" id="d-nav-pedia">
-        <span class="di-icon">📖</span> Ghostpedia
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('tv');mobileNavActive('m-nav-tv');" id="d-nav-tv">
-        <span class="di-icon">📺</span> Studio TV
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('agency');mobileNavActive('m-nav-agency');" id="d-nav-agency" style="color:#c080ff;">
-        <span class="di-icon">🏢</span> Paranormal Agency
-      </button>
-      <button class="drawer-nav-item" onclick="closeHamburger();showView('artifacts');mobileNavActive('m-nav-artifacts');" id="d-nav-artifacts" style="color:#cd853f;">
-        <span class="di-icon">🧿</span> Museum Artifak
-      </button>
-    </div>
-  </div>
-
-  <!-- MOBILE TOOL DRAWER (for explore view) -->
-  <div id="mobile-tool-drawer">
-    <div id="mobile-tool-drawer-title">
-      <span>🎒 PILIH ALAT</span>
-      <button id="mobile-tool-drawer-close" onclick="closeMobileToolDrawer()">✕</button>
-    </div>
-    <div id="mobile-tool-drawer-content"></div>
   </div>
 
   <!-- HUD -->
@@ -15766,5 +15719,56 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 600);
 });
 </script>
+
+<!-- ===== HAMBURGER OVERLAY & DRAWER — outside #app to avoid clipping ===== -->
+<div id="hamburger-overlay" onclick="closeHamburger()"></div>
+<div id="hamburger-drawer">
+  <div id="drawer-header">
+    <span>☰ MENU</span>
+    <button id="drawer-close" onclick="closeHamburger()">✕</button>
+  </div>
+  <div id="drawer-nav-list">
+    <button class="drawer-nav-item nextday-item" onclick="closeHamburger();tryAdvanceDay();" id="d-nav-nextday">
+      <span class="di-icon">🌙</span> Hari Baru
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('missions');mobileNavActive('m-nav-missions');" id="d-nav-missions">
+      <span class="di-icon">📋</span> Misi
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('map');mobileNavActive('m-nav-map');" id="d-nav-map">
+      <span class="di-icon">🗺️</span> Peta Lokasi
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('collection');mobileNavActive('m-nav-collection');" id="d-nav-collection">
+      <span class="di-icon">👻</span> Koleksi Hantu
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('shop');mobileNavActive('m-nav-shop');" id="d-nav-shop">
+      <span class="di-icon">🏪</span> Toko Alat
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('market');mobileNavActive('m-nav-market');" id="d-nav-market">
+      <span class="di-icon">💰</span> Pasar Gaib
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('pedia');mobileNavActive('m-nav-pedia');" id="d-nav-pedia">
+      <span class="di-icon">📖</span> Ghostpedia
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('tv');mobileNavActive('m-nav-tv');" id="d-nav-tv">
+      <span class="di-icon">📺</span> Studio TV
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('agency');mobileNavActive('m-nav-agency');" id="d-nav-agency" style="color:#c080ff;">
+      <span class="di-icon">🏢</span> Paranormal Agency
+    </button>
+    <button class="drawer-nav-item" onclick="closeHamburger();showView('artifacts');mobileNavActive('m-nav-artifacts');" id="d-nav-artifacts" style="color:#cd853f;">
+      <span class="di-icon">🧿</span> Museum Artifak
+    </button>
+  </div>
+</div>
+
+<!-- MOBILE TOOL DRAWER — outside #app to avoid clipping -->
+<div id="mobile-tool-drawer">
+  <div id="mobile-tool-drawer-title">
+    <span>🎒 PILIH ALAT</span>
+    <button id="mobile-tool-drawer-close" onclick="closeMobileToolDrawer()">✕</button>
+  </div>
+  <div id="mobile-tool-drawer-content"></div>
+</div>
+
 </body>
 </html>
