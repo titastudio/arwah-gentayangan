@@ -3,9 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Arwah Gentayangan — simulator perburuan hantu paranormal bernuansa Nusantara. Jelajahi lokasi angker, tangkap arwah gentayangan, dan bangun agensi paranormalmu sendiri.">
+<meta name="theme-color" content="#050402">
 <title>Arwah Gentayangan — Simulator Paranormal Nusantara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=VT323&family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=VT323&family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
 
 :root {
   --hitam: #0a0804;
@@ -1346,11 +1350,15 @@ html { scroll-behavior: smooth; }
     overflow-x: hidden !important;
   }
   .tv-left-panel {
+    /* Fix: flex:1 (inherited from desktop's side-by-side layout) made this panel
+       greedily consume all height in the stacked mobile column, squeezing the
+       cassette panel below to ~0px. Natural content height instead. */
+    flex: none !important;
     overflow-y: visible !important;
   }
   .tv-right-panel {
     width: 100% !important;
-    flex-shrink: unset !important;
+    flex: none !important;
     border-left: none !important;
     border-top: 1px solid var(--border) !important;
     /* Bug fix: kaset footage harus bisa di-scroll di mobile */
@@ -1545,17 +1553,6 @@ html { scroll-behavior: smooth; }
 .memory-chip.merged { color:#ff8c00; border-color:rgba(255,140,0,0.4); background:rgba(255,140,0,0.06); }
 .memory-chip.abandoned { color:var(--abu-light); border-color:var(--abu); }
 .memory-chip.ritual_fail { color:var(--merah-bright); border-color:rgba(140,26,26,0.5); }
-
-/* ===== RITUAL DRAWING PUZZLE ===== */
-.ritual-draw-overlay {
-  position:fixed; inset:0; z-index:7500; background:rgba(5,4,2,0.98);
-  display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px;
-}
-.ritual-draw-overlay.active { display:flex; animation:fadeIn 0.3s ease; }
-.ritual-canvas { border:2px solid var(--merah-bright); border-radius:4px; cursor:crosshair; background:#050305; display:block; }
-.ritual-progress-bar { width:400px; height:8px; background:var(--abu); border-radius:4px; overflow:hidden; }
-.ritual-progress-fill { height:100%; background:linear-gradient(90deg,var(--merah-bright),var(--merah-glow)); border-radius:4px; transition:width 0.3s; }
-.ritual-hint { font-family:'VT323',monospace; font-size:18px; color:var(--kuning-bright); text-align:center; }
 
 /* ===== CASSETTE TAPE SYSTEM ===== */
 .cassette-item { border:1px solid var(--border); border-radius:4px; padding:12px; margin-bottom:8px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.2s; }
@@ -2028,8 +2025,7 @@ html { scroll-behavior: smooth; }
 .night-event-overlay,
 .merge-overlay,
 .sell-sequence-overlay,
-.negotiation-overlay,
-.ritual-draw-overlay {
+.negotiation-overlay {
   overflow-y: auto;
 }
 
@@ -2321,7 +2317,7 @@ html { scroll-behavior: smooth; }
 <style>
 @media (max-width: 480px) {
   /* FIX 1: location card / map overflow */
-  #view-map {
+  #view-map.active {
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -2345,7 +2341,7 @@ html { scroll-behavior: smooth; }
     overflow: visible !important;
     position: relative !important;
   }
-  .view {
+  .view.active {
     height: 100% !important;
     max-height: 100% !important;
     display: flex !important;
@@ -2962,19 +2958,6 @@ html { scroll-behavior: smooth; }
   </div>
 </div>
 
-<!-- RITUAL DRAW OVERLAY -->
-<div class="ritual-draw-overlay" id="ritual-draw-overlay">
-  <div style="font-family:'VT323',monospace;font-size:28px;color:var(--merah-glow);letter-spacing:4px;">🔮 RITUAL PENGGABUNGAN</div>
-  <div class="ritual-hint" id="ritual-hint">Gambar pola berikut menggunakan kursor...</div>
-  <canvas class="ritual-canvas" id="ritual-canvas" width="400" height="300"></canvas>
-  <div style="width:400px;">
-    <div class="ritual-progress-bar"><div class="ritual-progress-fill" id="ritual-progress-fill" style="width:0%"></div></div>
-    <div style="display:flex;justify-content:space-between;font-family:'VT323',monospace;font-size:14px;color:var(--abu-light);margin-top:4px;"><span>Progres Ritual</span><span id="ritual-pct">0%</span></div>
-  </div>
-  <div style="display:flex;gap:10px;">
-    <button class="btn-main red" onclick="cancelRitualDraw()">✗ Batalkan</button>
-  </div>
-</div>
 <div id="puzzle-overlay">
   <!-- Instruction panel (shown first) -->
   <div id="puzzle-instruction-panel" style="display:flex;flex-direction:column;align-items:center;gap:20px;max-width:480px;text-align:center;">
@@ -5491,7 +5474,7 @@ function renderArtifactPedia() {
   // Group by location
   let html = '';
   LOCATIONS.filter(l => l.unlocked && ARTIFACT_DB[l.id]).forEach(loc => {
-    const locArts = ARTIFACT_DB[l.id] || [];
+    const locArts = ARTIFACT_DB[loc.id] || [];
     const foundCount = locArts.filter(a => everCollected.has(a.id)).length;
     if (foundCount === 0) return;
     html += `<div style="margin-bottom:14px;">
@@ -5715,6 +5698,7 @@ function loadGame() {
 
 function newGame() {
   localStorage.removeItem(SAVE_KEY);
+  nightEventShown = {}; // fresh playthrough must be able to re-trigger every scheduled event from day 1
   // Random start time: either late afternoon (16-18) or night (19-23)
   const startHourOptions = [16, 17, 18, 19, 20, 21, 22, 23];
   const startHour = startHourOptions[Math.floor(Math.random() * startHourOptions.length)];
@@ -5735,6 +5719,7 @@ function newGame() {
     locationsExploredToday:0, _pendingCaptureGhost:null,
     debts:[], tuyuls:[], cassettes:[], tvShowName:null,
     missionRefreshCount:0, jumatKliwonBonus:false,
+    lastLoginDate: new Date().toDateString(), loginStreak: 1,
   };
   LOCATIONS.forEach(l => { l.unlocked = l.unlockCost === 0; });
   // Starter tools per design: senter (investigasi dasar), kamera analog (deteksi), toples ritual (tangkap)
@@ -6311,20 +6296,6 @@ function enterLocation(locId) {
   
   updateGlobalInfoBar();
   startDetectorScan();
-}
-
-// Atmospheric bagian/ruangan names
-const ATMOSPHERIC_PREFIXES = [
-  'Berbau Darah','Penuh Laba-laba','Berdebu Tebal','Bau Busuk','Terasa Berat',
-  'Gelap Gulita','Penuh Belatung','Bau Apek','Retak Dindingnya','Basah Berlendir',
-  'Dingin Membeku','Bising Serangga','Berbau Tanah','Sunyi Mematikan','Mistis',
-  'Mencekam','Berkabut Aneh','Berbau Rempah','Penuh Jamur','Bergetar Sendiri',
-];
-
-function getAtmosphericName(roomName, hasghost) {
-  if (!hasghost) return roomName;
-  const prefix = ATMOSPHERIC_PREFIXES[Math.floor(Math.random() * ATMOSPHERIC_PREFIXES.length)];
-  return `${roomName} [${prefix}]`;
 }
 
 function showRoomSelection(loc) {
@@ -7278,42 +7249,6 @@ function showHotspotToolSelect(hs, tools) {
   if (fp) { fp.style.position = 'relative'; fp.appendChild(panel); }
 }
 
-function investigateHotspot(hs) {
-  if (exploreState.foundHotspots.includes(hs.id)) {
-    addLog(`[${hs.id}] Sudah diselidiki.`, '');
-    return;
-  }
-  
-  // Find available investigation tools (not capture tools)
-  const availableTools = GAME.tools.filter(t=>t.uses>0 && !['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'].includes(t.effect));
-  if (availableTools.length === 0) {
-    addLog('⚠️ Tidak ada alat investigasi! Beli di Toko (Senter, Radio, Dupa, dll).', 'danger');
-    return;
-  }
-  
-  // Store hotspot reference
-  exploreState._lastInvestigatedHotspotId = hs.id;
-  const hsEl = document.getElementById(`hs-${hs.id}`);
-  if (hsEl) { hsEl.style.animation = 'pulse 0.3s infinite'; hsEl.style.borderColor = 'rgba(240,200,64,0.8)'; }
-  
-  addLog(`🔴 Titik panas ditemukan: "${hs.desc}" — Pilih alat investigasi!`, 'clue');
-  hs.found = true;
-  exploreState.foundHotspots.push(hs.id);
-  exploreState.investigatedCount++;
-  
-  // Show tool selection panel instead of auto-using first tool
-  showHotspotToolSelect(hs, availableTools);
-  return;
-}
-
-function clickRoom(room) {
-  if (room.locked) {
-    openPuzzle(room.puzzleType, room);
-  } else {
-    enterRoom(room, exploreState.loc);
-  }
-}
-
 function exitExplore() {
   // If no ghosts remain in queue (area bersih), skip the confirmation warning
   if (exploreState.ghostQueue && exploreState.ghostQueue.length > 0) {
@@ -7369,24 +7304,6 @@ function reopenRoomSelect() {
   if (exploreState.loc) showRoomSelection(exploreState.loc);
 }
 
-function manualScan() {
-  if (!exploreState.loc) return;
-  if (_toolMechanicActive) { notify('Selesaikan dulu mekanisme alat yang sedang aktif!','warning'); return; }
-  
-  // If room not entered yet, prompt room selection
-  if (!exploreState.activeRoom) {
-    addLog('💡 Pilih ruangan untuk diinvestigasi terlebih dahulu!', 'important');
-    showRoomSelection(exploreState.loc);
-    return;
-  }
-  
-  // Check if any investigation tool left
-  const tool = GAME.tools.find(t=>t.uses>0 && !['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'].includes(t.effect));
-  if (!tool) { addLog('❌ Tidak ada alat investigasi! Beli di Toko dulu.','danger'); return; }
-  // Show tool mechanic for the best available tool
-  startToolMechanic(tool);
-  return;
-}
 function addLog(text, type='') {
   const log = document.getElementById('explore-log');
   if (!log) return;
@@ -7401,30 +7318,6 @@ function addLog(text, type='') {
 
 // Tool mechanic system — each tool has unique mini-mechanic
 let _toolMechanicActive = false;
-
-function useTool(tool) {
-  if (tool.uses <= 0) { notify('Alat ini sudah habis!','danger'); return; }
-  const loc = exploreState.loc;
-  if (!loc) { notify('Kamu tidak sedang eksplorasi.','warning'); return; }
-  if (_toolMechanicActive) { notify('Selesaikan dulu mekanisme alat yang sedang aktif!','warning'); return; }
-  
-  // Capture tools only usable in capture screen
-  if (['capture_weak','capture_mid','capture_photo','capture_strong','trap_strong','calm_strong','neutralize','store_essence'].includes(tool.effect)) {
-    notify(`${tool.emoji} ${tool.name} hanya bisa digunakan saat menangkap hantu!`, 'warning');
-    return;
-  }
-  
-  // If no room entered, show room selection first
-  if (!exploreState.activeRoom) {
-    notify('Masuk ke ruangan dulu sebelum menggunakan alat!', 'warning');
-    showRoomSelection(loc);
-    return;
-  }
-  
-  // Launch tool-specific mechanic
-  startToolMechanic(tool);
-  renderNewToolPanel();
-}
 
 function startToolMechanic(tool) {
   _toolMechanicActive = true;
@@ -9932,17 +9825,6 @@ function performSweetSpotCapture() {
   }
 }
 
-function startCapturing() {
-  // Delegated to performSweetSpotCapture via renderCaptureActions
-}
-// Legacy stub — actual capture handled by performSweetSpotCapture now
-function performCapture(tool) {
-  captureState._captureToolSelected = tool;
-  captureState._captureToolObj = tool;
-  startSweetSpotBar();
-  renderCaptureActions();
-}
-
 function closeCaptureScreen(success) {
   clearInterval(captureState.captureInterval);
   clearStageTimer();
@@ -10311,17 +10193,6 @@ function careAction(action) {
   saveGame();
 }
 
-// Alias: careGhost delegates to careAction
-function careGhost(ghostId, action) {
-  const ghost = GAME.ghosts.find(g=>g.id===ghostId);
-  if (!ghost) return;
-  // Set the currentGhostDetail so careAction can find it
-  const prev = currentGhostDetail;
-  currentGhostDetail = ghost;
-  careAction(action);
-  currentGhostDetail = prev;
-}
-
 function calculateGhostValue(ghost) {
   const type = GHOST_TYPES.find(g=>g.id===ghost.typeId);
   if (!type) return 0;
@@ -10349,33 +10220,6 @@ function calculateGhostValue(ghost) {
   if ((ghost.rarity==='rare'||ghost.rarity==='mythic') && GAME.weather==='malam berbulan') val*=1.15;
   if (ghost.rarity==='mythic' && GAME.weather==='badai') val*=1.25;
   return Math.floor(val);
-}
-
-function sellGhostFromDetail() {
-  const ghost = currentGhostDetail;
-  if (!ghost) return;
-  // Navigate to Pasar Gaib market interface (sell tab)
-  closeGhostDetail();
-  showView('market');
-  // Switch to sell tab
-  setTimeout(() => {
-    const tabs = document.querySelectorAll('.market-tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    if (tabs[0]) tabs[0].classList.add('active');
-    switchMarketTab('sell', tabs[0]);
-    // Highlight the ghost in the sell list and open its sell modal
-    openSellModal(ghost.id, true);
-  }, 150);
-}
-
-// Bug 13 fix: Dedicated auction entry from ghost detail — closes all overlays first,
-// then navigates directly to Pasar Gaib auction tab without showing sell modal on top
-function auctionGhostFromDetail() {
-  const ghost = currentGhostDetail;
-  if (!ghost) return;
-  closeGhostDetail();
-  // openAuctionFromCollection handles view navigation, tab switching, and dialog
-  openAuctionFromCollection(ghost.id);
 }
 
 // ============================================================
@@ -11028,6 +10872,7 @@ function proceedSellSetup(ghostId, fromCollection) {
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
           <button class="btn-main green" onclick="initiateSellSequence('${ghost.id}')" style="font-size:16px;padding:8px 22px;">📡 Hubungi Pembeli</button>
+          <button class="btn-main yellow" onclick="closeSellModal();setTimeout(()=>openNegotiationFromSell('${ghost.id}'),100)" style="font-size:15px;padding:8px 16px;">🤝 Cari Kolektor</button>
           ${fromCollection ? `<button class="btn-main yellow" onclick="closeSellModal();setTimeout(()=>openAuctionFromCollection('${ghost.id}'),100)" style="font-size:15px;padding:8px 16px;">🏆 Lelang</button>` : ''}
           <button class="btn-main red" onclick="closeSellModal()" style="font-size:15px;padding:8px 14px;">✕ Batal</button>
         </div>
@@ -11111,19 +10956,6 @@ function initiateSellSequence(ghostId) {
 
   // Run the sequence
   runSellSequence(ghost, buyer, askPrice, marketPrice, mood);
-}
-
-function addTerminalLine(bodyEl, text, cls='', delay=0) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const div = document.createElement('div');
-      div.className = `terminal-line ${cls}`;
-      div.textContent = text;
-      bodyEl.appendChild(div);
-      bodyEl.scrollTop = bodyEl.scrollHeight;
-      resolve();
-    }, delay);
-  });
 }
 
 function runSellSequence(ghost, buyer, askPrice, marketPrice, mood) {
@@ -12039,59 +11871,6 @@ function finalizeAuction(ghostId, amount) {
   updateHUD(); saveGame(); renderMarket(); renderCollection(); renderAuction();
 }
 
-function quickSell(ghostId) {
-  const ghost = GAME.ghosts.find(g=>g.id===ghostId);
-  if (!ghost) return;
-  // Bug 1/4 fix: block selling ghost currently in auction process
-  if (ghost._inAuction) {
-    notify('⚠️ Hantu ini sedang dalam proses lelang — tidak bisa dijual langsung!', 'danger');
-    return;
-  }
-  // Require confirmation for valuable ghosts to prevent accidental sells
-  if (['epic','mythic','anomaly'].includes(ghost.rarity)) {
-    const val = calculateGhostValue(ghost);
-    const rarLabel = ghost.rarity === 'mythic' ? 'MISTIS' : ghost.rarity === 'anomaly' ? 'ANOMALI' : 'EPIK';
-    const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:9100;background:rgba(5,4,2,0.92);display:flex;align-items:center;justify-content:center;padding:20px;';
-    ov.innerHTML = `
-      <div style="max-width:380px;width:100%;border:2px solid var(--kuning-glow);border-radius:8px;background:rgba(10,8,4,0.99);animation:fadeIn 0.25s ease;">
-        <div style="padding:14px 18px;border-bottom:1px solid rgba(240,200,64,0.25);font-family:VT323,monospace;font-size:22px;color:var(--kuning-bright);">⚠️ Jual Hantu ${rarLabel}?</div>
-        <div style="padding:14px 18px;font-family:VT323,monospace;font-size:18px;color:var(--text);line-height:1.6;">
-          ${ghost.emoji} <b>${ghost.name}</b><br>
-          Harga: <b style="color:var(--hijau-glow);">Rp${val.toLocaleString('id')}</b><br>
-          <span style="color:var(--merah-glow);font-size:16px;">Hantu ${rarLabel} sangat langka!</span>
-        </div>
-        <div style="display:flex;gap:10px;padding:10px 18px 16px;justify-content:flex-end;">
-          <button onclick="closeModal(this);" style="font-family:VT323,monospace;font-size:18px;padding:7px 18px;border:1px solid var(--hijau-glow);color:var(--hijau-glow);background:transparent;border-radius:4px;cursor:pointer;">✗ Simpan</button>
-          <button id="qs-sell-btn" style="font-family:VT323,monospace;font-size:18px;padding:7px 16px;border:1px solid var(--kuning-glow);color:var(--kuning-bright);background:rgba(107,90,26,0.15);border-radius:4px;cursor:pointer;">💰 Jual</button>
-        </div>
-      </div>`;
-    document.body.appendChild(ov);
-    ov.querySelector('#qs-sell-btn').onclick = () => { ov.remove(); _doQuickSell(ghost); };
-    ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
-    return;
-  }
-  _doQuickSell(ghost);
-}
-
-function _doQuickSell(ghost) {
-  const val = calculateGhostValue(ghost);
-  const type = GHOST_TYPES.find(g=>g.id===ghost.typeId);
-  const dial = type?.dialogues?.sell||['...'];
-  GAME.ghosts.splice(GAME.ghosts.indexOf(ghost),1);
-  GAME.money += val;
-  GAME.soldTotal++;
-  // Remove footage
-  GAME.footage = GAME.footage.filter(f=>f.ghostId!==ghost.id);
-  // Auto-check sell missions
-  let missionCompleted = false;
-  GAME.missions?.forEach(m=>{
-    if(!m.completed&&m.type==='sell'&&!missionCompleted){m.completed=true;GAME.money+=m.reward;missionCompleted=true;notify(`✅ Misi "${m.title}" selesai! +Rp${m.reward.toLocaleString('id')}`,'success');}
-  });
-  notify(`${ghost.name} dijual: +Rp${val.toLocaleString('id')}`, 'success');
-  notify(`"${dial[Math.floor(Math.random()*dial.length)]}"`, 'info');
-  updateHUD(); saveGame(); renderMarket(); renderAuction();
-}
 
 function renderAuction() {
   const area = document.getElementById('market-auction');
@@ -13432,7 +13211,41 @@ function startGame(isNew) {
     notify('✅ Data tersimpan berhasil dimuat!','success');
     updateJawaBar();
     setTimeout(()=>checkNightEvents(), 5000);
+    setTimeout(()=>checkDailyLoginStreak(), 1800);
   }
+}
+
+// ============================================================
+// DAILY LOGIN STREAK — rewards returning players
+// ============================================================
+function checkDailyLoginStreak() {
+  const todayStr = new Date().toDateString();
+  if (GAME.lastLoginDate === todayStr) return; // already claimed today
+
+  const prevDate = GAME.lastLoginDate ? new Date(GAME.lastLoginDate) : null;
+  let streak = GAME.loginStreak || 0;
+
+  if (prevDate) {
+    const dayGap = Math.round((new Date(todayStr) - prevDate) / 86400000);
+    streak = dayGap === 1 ? streak + 1 : 1; // consecutive day vs. streak broken
+  } else {
+    streak = 1; // first tracked login
+  }
+  streak = Math.min(streak, 7); // cap the visible cycle at 7 days, then it loops
+
+  GAME.loginStreak = streak;
+  GAME.lastLoginDate = todayStr;
+
+  const moneyBonus = 500 * streak;
+  const fameBonus = streak >= 7 ? 10 : (streak % 3 === 0 ? 3 : 0);
+  GAME.money += moneyBonus;
+  if (fameBonus) GAME.fame += fameBonus;
+
+  const streakLabel = streak >= 7 ? '🔥 7 HARI BERTURUT-TURUT!' : `Hari ke-${streak}`;
+  notify(`🌙 Selamat datang kembali! ${streakLabel} — +Rp${moneyBonus.toLocaleString('id')}${fameBonus?` +${fameBonus} Fame`:''}`, 'success');
+
+  updateHUD();
+  saveGame();
 }
 
 function confirmNewGame() {
@@ -13461,22 +13274,82 @@ function confirmNewGame() {
 }
 
 // ============================================================
-// JAWA CALENDAR SYSTEM
+// JAWA CALENDAR SYSTEM — fixed, deterministic, keyed on GAME.day
+// (NOT tied to the real-world date — every playthrough follows
+// the exact same calendar, so events are 100% predictable.)
 // ============================================================
 const DINA_JAWA = ['Legi','Pahing','Pon','Wage','Kliwon'];
 const DINA_BIASA = ['Ahad','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
-function getJawaDay() {
-  const d = new Date();
-  const wib = new Date(d.getTime() + (7*60*60*1000));
-  const jawa = DINA_JAWA[(Math.floor(wib.getTime()/(86400*1000)) + 2) % 5];
-  const biasa = DINA_BIASA[wib.getDay()];
-  return {biasa, jawa, full: biasa + ' ' + jawa};
+// Calendar structure: 30-day "bulan" (month), 4 bulan per cycle (120 game-days),
+// then the whole cycle repeats identically forever.
+const CALENDAR_DAYS_PER_MONTH = 30;
+const CALENDAR_MONTHS_PER_CYCLE = 4;
+const CALENDAR_CYCLE_LENGTH = CALENDAR_DAYS_PER_MONTH * CALENDAR_MONTHS_PER_CYCLE; // 120
+const CALENDAR_MONTH_NAMES = ['Sura','Sapar','Mulud','Bakda Mulud'];
+
+// Day 1 of every cycle is fixed to the "Jumat Kliwon" weton for flavor.
+const CALENDAR_BIASA_OFFSET = 5; // index into DINA_BIASA for cycle-day 1
+const CALENDAR_JAWA_OFFSET  = 4; // index into DINA_JAWA for cycle-day 1
+
+function getCycleDay(gameDay) {
+  // 1-indexed position within the current 120-day cycle
+  return ((Math.max(1, gameDay|0) - 1) % CALENDAR_CYCLE_LENGTH) + 1;
 }
 
-function isJumatKliwon() {
-  const j = getJawaDay();
-  return j.biasa === 'Jumat' && j.jawa === 'Kliwon';
+// Authentic 7-day (biasa) x 5-day (pasaran) weton rotation — flavor/lore label only.
+// This naturally realigns to "Jumat Kliwon" every 35 days, same as the real Javanese
+// calendar. It is NOT used to decide when the special ritual night fires (see below) —
+// that has its own fixed, more frequent schedule so the tooltip never claims a weton
+// coincidence that isn't actually happening that day.
+function getJawaDay(gameDay) {
+  const day = gameDay || (GAME && GAME.day) || 1;
+  const cycleDay = getCycleDay(day);
+  const biasa = DINA_BIASA[(cycleDay - 1 + CALENDAR_BIASA_OFFSET) % 7];
+  const jawa  = DINA_JAWA[(cycleDay - 1 + CALENDAR_JAWA_OFFSET) % 5];
+  const monthIdx = Math.floor((cycleDay - 1) / CALENDAR_DAYS_PER_MONTH);
+  const dayOfMonth = ((cycleDay - 1) % CALENDAR_DAYS_PER_MONTH) + 1;
+  return {
+    biasa, jawa, full: biasa + ' ' + jawa,
+    month: CALENDAR_MONTH_NAMES[monthIdx], dayOfMonth, cycleDay,
+  };
+}
+
+// Fixed special-night schedule within the 120-day cycle — every playthrough hits
+// these exact same game-days, every cycle, forever. No RNG, no real-world date.
+// Verified collision-free: every game-day maps to at most one scheduled event.
+// "Malam Kliwon" ritual night: every 14 days (biweekly) starting day 7 — 9x per cycle.
+// This is a deliberately simpler, more frequent cadence than the natural 35-day weton
+// recurrence above, so the ritual bonus stays a reliable, planned-for event.
+const CALENDAR_JUMAT_KLIWON_DAYS = [7,21,35,49,63,77,91,105,119];
+const CALENDAR_URBAN_LEGEND_DAYS = [4,12,18,26,34,42,48,56,64,72,78,86,94,102,108,116];
+const CALENDAR_CURSED_WEATHER_DAYS = [9,17,23,33,39,47,53,69,83,93,99,107,113];
+const CALENDAR_HUJAN_DERAS_DAYS = [2,13,25,38,50,62,74,88,100,112];
+const CALENDAR_GERHANA_DAYS = [15,45,75,103]; // once per bulan
+
+function isJumatKliwon(gameDay) {
+  const day = gameDay || (GAME && GAME.day) || 1;
+  return CALENDAR_JUMAT_KLIWON_DAYS.includes(getCycleDay(day));
+}
+
+function getScheduledCalendarEventId(gameDay) {
+  const day = gameDay || (GAME && GAME.day) || 1;
+  const cd = getCycleDay(day);
+  if (CALENDAR_JUMAT_KLIWON_DAYS.includes(cd)) return 'jumat_kliwon';
+  if (CALENDAR_GERHANA_DAYS.includes(cd)) return 'gerhana';
+  if (CALENDAR_CURSED_WEATHER_DAYS.includes(cd)) return 'cursed_weather';
+  if (CALENDAR_HUJAN_DERAS_DAYS.includes(cd)) return 'hujan_deras';
+  if (CALENDAR_URBAN_LEGEND_DAYS.includes(cd)) return 'urban_legend';
+  return null;
+}
+
+// Days until the next scheduled ritual night — useful for UI hints ("3 hari lagi").
+function daysUntilNextJumatKliwon(gameDay) {
+  const day = gameDay || (GAME && GAME.day) || 1;
+  const cd = getCycleDay(day);
+  const next = CALENDAR_JUMAT_KLIWON_DAYS.find(d => d >= cd);
+  if (next !== undefined) return next - cd;
+  return (CALENDAR_JUMAT_KLIWON_DAYS[0] + CALENDAR_CYCLE_LENGTH) - cd; // wraps to next cycle
 }
 
 const NEPTU_BIASA = {Ahad:5,Senin:4,Selasa:3,Rabu:7,Kamis:8,Jumat:6,Sabtu:9};
@@ -13513,17 +13386,19 @@ function updateJawaBar() {
   const isJK = isJumatKliwon();
   const neptTotal = (NEPTU_BIASA[j.biasa]||0) + (NEPTU_JAWA[j.jawa]||0);
   const special = WETON_SPECIAL[j.full] || '';
+  const daysUntilJK = isJK ? 0 : daysUntilNextJumatKliwon();
   const tooltipHtml = `
     <div style="text-align:left;max-width:280px;">
       <div style="color:#e0b0ff;font-size:16px;margin-bottom:6px;border-bottom:1px solid rgba(180,120,255,0.4);padding-bottom:4px;">
-        ${j.full} <span style="color:#aaa;font-size:16px;">(Neptu ${neptTotal})</span>
+        ${j.full} <span style="color:#aaa;font-size:16px;">(Neptu ${neptTotal})</span> · ${j.month}, hari ke-${j.dayOfMonth}
       </div>
       <div style="color:#c8a0ff;margin-bottom:4px;">📅 ${INFO_BIASA[j.biasa]||''}</div>
       <div style="color:#c8a0ff;margin-bottom:${special?'6px':'0'};">🌀 ${INFO_JAWA[j.jawa]||''}</div>
       ${special ? `<div style="color:#ff80ff;margin-top:4px;border-top:1px solid rgba(255,100,255,0.3);padding-top:4px;">${special}</div>` : ''}
+      <div style="color:#ff60ff;margin-top:6px;border-top:1px solid rgba(255,100,255,0.3);padding-top:4px;">${isJK ? '⚡ Malam Kliwon aktif malam ini!' : `🔮 Malam Kliwon berikutnya: ${daysUntilJK} hari lagi`}</div>
     </div>`;
   jb.style.display = 'block';
-  jb.innerHTML = `Hari Jawa: <span id="jawa-day-label" style="color:#e0b0ff;cursor:help;position:relative;font-weight:bold;">${j.full}<span id="jawa-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(20,0,40,0.97);border:1px solid rgba(180,100,255,0.5);border-radius:6px;padding:10px 14px;font-size:16px;color:#ccc;white-space:normal;z-index:9999;box-shadow:0 4px 24px rgba(120,0,200,0.4);pointer-events:none;">${tooltipHtml}</span></span>${isJK ? ' ⚡ <b style="color:#ff60ff">JUMAT KLIWON — RITUAL MULTIPLIER x3!</b>' : ''}`;
+  jb.innerHTML = `Hari Jawa: <span id="jawa-day-label" style="color:#e0b0ff;cursor:help;position:relative;font-weight:bold;">${j.full}<span id="jawa-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(20,0,40,0.97);border:1px solid rgba(180,100,255,0.5);border-radius:6px;padding:10px 14px;font-size:16px;color:#ccc;white-space:normal;z-index:9999;box-shadow:0 4px 24px rgba(120,0,200,0.4);pointer-events:none;">${tooltipHtml}</span></span>${isJK ? ' ⚡ <b style="color:#ff60ff">MALAM KLIWON — RITUAL MULTIPLIER x3!</b>' : ''}`;
   const label = document.getElementById('jawa-day-label');
   const tip   = document.getElementById('jawa-tooltip');
   if (label && tip) {
@@ -13561,10 +13436,10 @@ const NIGHT_EVENTS = [
     apply: () => { GAME.vehicleBonus = true; setTimeout(()=>{GAME.vehicleBonus=false;}, 90000); }
   },
   {
-    id:'jumat_kliwon', title:'⚡ MALAM JUMAT KLIWON',
-    body:'Malam paling keramat dalam kalender Jawa.\nRitual memiliki kekuatan berlipat ganda. Hantu-hantu leluhur bangkit.',
+    id:'jumat_kliwon', title:'⚡ MALAM KLIWON',
+    body:'Malam ritual keramat dalam kalender permainan ini.\nRitual memiliki kekuatan berlipat ganda. Hantu-hantu leluhur bangkit.',
     effect:'🔮 Semua ritual: x3 | Gabung Raga gratis malam ini! | Mythic muncul tanpa syarat',
-    apply: () => { GAME.jumatKliwonBonus = true; notify('⚡ JUMAT KLIWON! Ritual gratis malam ini!','danger'); }
+    apply: () => { GAME.jumatKliwonBonus = true; notify('⚡ MALAM KLIWON! Ritual gratis malam ini!','danger'); }
   },
   {
     id:'cursed_weather', title:'🌪️ CUACA TERKUTUK',
@@ -13580,32 +13455,20 @@ let nightEventShown = {};
 function checkNightEvents() {
   if (!GAME.started) return;
   const hour = Math.floor(GAME.gameHour) % 24;
-  
-  // Jumat Kliwon check (real day)
-  if (isJumatKliwon() && !GAME.jumatKliwonBonus && !nightEventShown['jumat_kliwon']) {
-    nightEventShown['jumat_kliwon'] = true;
-    showNightEvent(NIGHT_EVENTS.find(e=>e.id==='jumat_kliwon'));
+
+  // Fixed calendar schedule — same game-day always produces the same event,
+  // every playthrough, every cycle. No RNG, no real-world date involved.
+  const scheduledId = getScheduledCalendarEventId(GAME.day);
+  if (scheduledId && !nightEventShown[scheduledId]) {
+    nightEventShown[scheduledId] = true;
+    showNightEvent(NIGHT_EVENTS.find(e=>e.id===scheduledId));
     return;
   }
-  
-  // Hour-based events
+
+  // Hour-based event — legitimately tied to time-of-night, not the calendar.
   if (hour === 0 && !nightEventShown['midnight_surge']) {
     nightEventShown['midnight_surge'] = true;
     showNightEvent(NIGHT_EVENTS.find(e=>e.id==='midnight_surge'));
-    return;
-  }
-  
-  // Random roaming urban legend ~5% per check
-  if (Math.random() < 0.03 && !nightEventShown['urban_legend'] && (hour >= 0 && hour <= 3)) {
-    nightEventShown['urban_legend'] = true;
-    showNightEvent(NIGHT_EVENTS.find(e=>e.id==='urban_legend'));
-    return;
-  }
-  
-  // Cursed weather rare
-  if (Math.random() < 0.015 && !nightEventShown['cursed_weather']) {
-    nightEventShown['cursed_weather'] = true;
-    showNightEvent(NIGHT_EVENTS.find(e=>e.id==='cursed_weather'));
     return;
   }
 }
@@ -13709,122 +13572,6 @@ function patchGhostMemory(ghost, action) {
   }
 }
 
-// Inject memory tracking into ghost care — patch quickSell to mark sold_before and confirm high-rarity
-
-// ============================================================
-// RITUAL DRAW MECHANIC
-// ============================================================
-let ritualState = {ghost1:null, ghost2:null, pattern:[], drawn:[], progress:0, drawing:false, animFrame:null};
-
-function openRitualDraw(g1, g2) {
-  ritualState.ghost1 = g1; ritualState.ghost2 = g2;
-  ritualState.progress = 0; ritualState.drawing = false;
-  
-  const overlay = document.getElementById('ritual-draw-overlay');
-  overlay.classList.add('active');
-  
-  const canvas = document.getElementById('ritual-canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-  // Generate random pattern points
-  const pts = 5 + Math.floor(Math.random()*4);
-  ritualState.pattern = Array.from({length:pts}, (_,i) => ({
-    x: 60 + Math.random()*(canvas.width-120),
-    y: 60 + Math.random()*(canvas.height-120),
-  }));
-  ritualState.patternIndex = 0;
-  
-  drawRitualPattern(ctx, canvas);
-  
-  document.getElementById('ritual-hint').textContent = `Gambar garis mengikuti titik merah (${pts} titik) — tahan dan seret jari/mouse!`;
-  document.getElementById('ritual-progress-fill').style.width = '0%';
-  document.getElementById('ritual-pct').textContent = '0%';
-  
-  // Mouse events
-  canvas.onmousedown = (e) => { ritualState.drawing = true; };
-  canvas.onmouseup = () => { ritualState.drawing = false; };
-  canvas.onmousemove = (e) => {
-    if (!ritualState.drawing) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    checkRitualProgress(mx, my, ctx, canvas);
-  };
-  canvas.ontouchstart = (e) => { e.preventDefault(); ritualState.drawing = true; };
-  canvas.ontouchend = () => { ritualState.drawing = false; };
-  canvas.ontouchmove = (e) => {
-    if (!ritualState.drawing) return;
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const t = e.touches[0];
-    const mx = t.clientX - rect.left;
-    const my = t.clientY - rect.top;
-    checkRitualProgress(mx, my, ctx, canvas);
-  };
-}
-
-function drawRitualPattern(ctx, canvas) {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Draw lines between pattern points (target)
-  ctx.strokeStyle = 'rgba(192,57,43,0.3)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5,8]);
-  ctx.beginPath();
-  ritualState.pattern.forEach((p,i) => {
-    if (i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
-  });
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  // Draw target points
-  ritualState.pattern.forEach((p,i) => {
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,i<ritualState.patternIndex?8:12,0,Math.PI*2);
-    ctx.fillStyle = i<ritualState.patternIndex?'rgba(74,140,74,0.8)':'rgba(192,57,43,0.8)';
-    ctx.fill();
-    ctx.font='12px VT323,monospace'; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(i+1, p.x, p.y);
-  });
-}
-
-function checkRitualProgress(mx, my, ctx, canvas) {
-  if (ritualState.patternIndex >= ritualState.pattern.length) return;
-  
-  // Draw trail
-  if (!ritualState.lastX) { ritualState.lastX=mx; ritualState.lastY=my; }
-  ctx.strokeStyle = 'rgba(192,57,43,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([]);
-  ctx.beginPath(); ctx.moveTo(ritualState.lastX,ritualState.lastY); ctx.lineTo(mx,my); ctx.stroke();
-  ritualState.lastX = mx; ritualState.lastY = my;
-  
-  const target = ritualState.pattern[ritualState.patternIndex];
-  const dist = Math.sqrt((mx-target.x)**2 + (my-target.y)**2);
-  
-  if (dist < 25) {
-    ritualState.patternIndex++;
-    drawRitualPattern(ctx, canvas);
-    ritualState.lastX = null; ritualState.lastY = null;
-    const pct = Math.round((ritualState.patternIndex/ritualState.pattern.length)*100);
-    document.getElementById('ritual-progress-fill').style.width = pct+'%';
-    document.getElementById('ritual-pct').textContent = pct+'%';
-    
-    if (ritualState.patternIndex >= ritualState.pattern.length) {
-      // Ritual complete!
-      setTimeout(()=>{
-        document.getElementById('ritual-draw-overlay').classList.remove('active');
-        mergeState = {ghost1: ritualState.ghost1, ghost2: ritualState.ghost2, ritualDone: true};
-        notify('🔮 Ritual berhasil! Melanjutkan fusi...', 'success');
-        confirmMerge();
-      }, 800);
-    }
-  }
-}
-
-function cancelRitualDraw() {
-  document.getElementById('ritual-draw-overlay').classList.remove('active');
-  ritualState = {ghost1:null,ghost2:null,pattern:[],drawn:[],progress:0,drawing:false,animFrame:null};
-}
-
 // ============================================================
 // CASSETTE TAPE EVIDENCE SYSTEM
 // ============================================================
@@ -13913,6 +13660,7 @@ function renderCassetteList() {
   tapes.slice().reverse().forEach(t => {
     const inSlot = _tvCassetteSlots.includes(t.id);
     const isSelected = _tvSelectedCassette === t.id;
+    const canMakeFootage = t.played && !inSlot && !t.usedAsFootage;
     const el = document.createElement('div');
     el.className = `cassette-item ${inSlot ? 'playing' : ''} ${isSelected ? 'selected' : ''}`;
     el.draggable = true;
@@ -13924,6 +13672,7 @@ function renderCassetteList() {
         <div class="cassette-title">${t.ghostName}</div>
         <div class="cassette-meta">${t.location} · Hari ${t.day}</div>
         ${t.played?`<div style="font-size:14px;color:var(--hijau-glow);font-style:italic;">${t.evp}</div>`:'<div style="font-size:14px;color:var(--abu-light);">▷ Klik untuk putar EVP</div>'}
+        ${t.usedAsFootage?'<div style="font-size:13px;color:var(--kuning-bright);">📺 Sudah jadi footage TV</div>':canMakeFootage?`<button onclick="event.stopPropagation();cassetteToFootage('${t.id}')" style="font-family:VT323,monospace;font-size:13px;padding:2px 8px;margin-top:4px;border:1px solid var(--kuning-glow);color:var(--kuning-bright);background:rgba(107,90,26,0.15);border-radius:3px;cursor:pointer;">📺 Jadikan Footage</button>`:''}
       </div>
       <div style="font-family:VT323,monospace;font-size:15px;color:${inSlot?'var(--hijau-glow)':'var(--abu-light)'};">${inSlot?'✓ Di slot':'→ Drag'}</div>
     `;
@@ -14321,6 +14070,16 @@ function uploadTV() {
 // NPC COLLECTOR NEGOTIATION SYSTEM
 // ============================================================
 let negoState = {ghost:null, basePrice:0, currentPrice:0, bumps:0, maxBumps:8};
+
+// Entry point wired from the sell modal's "Cari Kolektor" button.
+// openNegotiation() itself expects a live ghost object (not an id string,
+// unlike most other functions here), so this wrapper does that lookup.
+function openNegotiationFromSell(ghostId) {
+  const ghost = GAME.ghosts.find(g => g.id === ghostId);
+  if (!ghost) return;
+  if (ghost._inAuction) { notify('⚠️ Hantu ini sedang dalam proses lelang!', 'danger'); return; }
+  openNegotiation(ghost);
+}
 
 function openNegotiation(ghost) {
   const basePrice = calculateGhostValue(ghost);
@@ -15687,6 +15446,15 @@ window.addEventListener('keydown', (e) => {
     document.getElementById('puzzle-overlay').classList.remove('active');
     document.getElementById('tutorial-overlay').classList.remove('active');
   }
+});
+
+// Safety-net autosave — catches any progress made between explicit saveGame() calls
+// if the player closes the tab, switches apps, or the browser is killed unexpectedly.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && GAME && GAME.started) saveGame();
+});
+window.addEventListener('pagehide', () => {
+  if (GAME && GAME.started) saveGame();
 });
 
 window.addEventListener('DOMContentLoaded', () => {
